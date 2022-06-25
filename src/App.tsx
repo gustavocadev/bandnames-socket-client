@@ -1,9 +1,12 @@
+import { SocketProvider } from './context/socket';
 import Home from './routes/Home';
 function App() {
   return (
-    <main className="container mx-auto">
-      <Home />
-    </main>
+    <SocketProvider>
+      <main className="container mx-auto">
+        <Home />
+      </main>
+    </SocketProvider>
   );
 }
 

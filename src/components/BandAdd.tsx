@@ -1,22 +1,22 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useContext, useState } from 'react';
+import { SocketContext } from '../context/socket';
 
-type Props = {
-  createNewBand: (name: string) => void;
-};
-const BandAdd = ({ createNewBand }: Props) => {
+type Props = {};
+
+const BandAdd = ({}: Props) => {
   const [bandName, setBandName] = useState('');
+
+  const { socket } = useContext(SocketContext);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (bandName.trim().length <= 0) return;
 
     // emit
-    createNewBand(bandName);
+    socket.emit('new-band', { name: bandName });
 
     // clear the input
     setBandName('');
-    console.log(bandName);
   };
 
   return (

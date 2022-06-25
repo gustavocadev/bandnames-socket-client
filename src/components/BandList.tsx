@@ -1,13 +1,21 @@
 import { Band } from '../types/types';
-import { ChangeEvent, useEffect, useState } from 'react';
-type Props = {
-  data: Band[];
-  vote: (id: string) => void;
-  deleteBand: (id: string) => void;
-  changeName: (id: string, name: string) => void;
-};
-const BandList = ({ data, vote, deleteBand, changeName }: Props) => {
-  const [bands, setBands] = useState(data);
+import { ChangeEvent, useEffect, useState, useContext } from 'react';
+import { SocketContext } from '../context/socket/SocketContext';
+type Props = {};
+
+const BandList = ({}: Props) => {
+  const [bands, setBands] = useState<Band[]>([]);
+
+  const { socket } = useContext(SocketContext);
+
+  useEffect(() => {
+    socket.on('current-bands', (payload) => {
+      setBands(payload);
+    });
+    return () => {
+      socket.off('current-bands');
+    };
+  }, [socket]);
 
   const handleNameChange = (
     { target }: ChangeEvent<HTMLInputElement>,
@@ -24,14 +32,17 @@ const BandList = ({ data, vote, deleteBand, changeName }: Props) => {
     setBands(updatedBands);
   };
 
-  useEffect(() => {
-    setBands(data);
-  }, [data]);
-
   const handleLostFocusBlur = (id: string, name: string) => {
-    console.log(id, name);
-    console.log('Lost focus');
-    changeName(id, name);
+    // emit to the server to change the name
+    socket.emit('change-band-name', { id, name });
+  };
+
+  const voteForABand = (id: string) => {
+    socket.emit('vote-band', id);
+  };
+
+  const deleteABand = (id: string) => {
+    socket.emit('delete-band', id);
   };
 
   const createRows = () => {
@@ -41,7 +52,10 @@ const BandList = ({ data, vote, deleteBand, changeName }: Props) => {
           <td className="px-3 py-2">
             <button
               className="rounded bg-blue-500 py-2 px-4 text-xl"
-              onClick={() => vote(band.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                voteForABand(band.id);
+              }}
             >
               +1
             </button>
@@ -61,7 +75,10 @@ const BandList = ({ data, vote, deleteBand, changeName }: Props) => {
           <td className="px-3 py-2">
             <button
               className="rounded bg-red-500 py-2 px-4 text-xl"
-              onClick={() => deleteBand(band.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteABand(band.id);
+              }}
             >
               Borrar
             </button>
